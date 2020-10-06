@@ -49,23 +49,25 @@ export class WebSocketClient extends EventEmitter {
         this.connection.onopen = this.handleConnect;
 
         return new Promise((resolve, reject) => {
-            setTimeout(() => {
-                reject({message: `WebSocketClient failed to connect before timeout (${this.timeout}  ms)`});
-            }, this.timeout);
+            if(!this.autoReconnect) {
+                setTimeout(() => {
+                    reject({message: `WebSocketClient failed to connect before timeout (${this.timeout}  ms)`});
+                }, this.timeout);
 
-            this.once('error', error => {
-                reject({
-                    message: error.message ? error.message : 'An error occured while connecting'
+                this.once('error', error => {
+                    reject({
+                        message: error.message ? error.message : 'An error occured while connecting'
+                    });
                 });
-            });
 
-            this.once('disconnect', event => {
-                reject({
-                    message: event.reason ? event.reason : 'A close event occured while connecting',
-                    code: event.code,
-                    reason: event.reason,
+                this.once('disconnect', event => {
+                    reject({
+                        message: event.reason ? event.reason : 'A close event occured while connecting',
+                        code: event.code,
+                        reason: event.reason,
+                    });
                 });
-            });
+            }
 
             this.once('connect', event => {
                 resolve(event);
